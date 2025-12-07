@@ -403,7 +403,6 @@ prompt: (scheduled | emphasized | grouped
 
 !weighted: plain ":" NUMBER
 
-# Варианты планирования: число может быть до или после закрывающей скобки
 scheduled: "[" [prompt (":" prompt)* ":" NUMBER (WHITESPACE* step_range_list)?] "]" (WHITESPACE* reverse_flag)?
         | "[" [prompt (":" prompt)*] "]" ":" NUMBER (WHITESPACE* step_range_list)? (WHITESPACE* reverse_flag)?
 reverse_flag: "reverse" | "r"
@@ -438,6 +437,7 @@ plain: /([^\\[\]\{\}\(\),&:!|]|\\.)+/
 
 schedule_parser = lark.Lark(_grammar, start="start")
 
+# Варианты планирования: число может быть до или после закрывающей скобки
 # --- ДОБАВИТЬ ЭТУ ФУНКЦИЮ ---
 @lru_cache(maxsize=CACHE_SIZE)
 def _parse_lark_cached(prompt: str):
@@ -2711,3 +2711,4 @@ def visualize_schedule(text: str, steps: int = 20, seed: int | None = None) -> s
         out_lines.append(f"Шаги {start}-{end}: {t}")
         prev_end = end
     return "\n".join(out_lines)
+
