@@ -403,6 +403,7 @@ prompt: (scheduled | emphasized | grouped
 
 !weighted: plain ":" NUMBER
 
+# Варианты планирования: число может быть до или после закрывающей скобки
 scheduled: "[" [prompt (":" prompt)* ":" NUMBER (WHITESPACE* step_range_list)?] "]" (WHITESPACE* reverse_flag)?
         | "[" [prompt (":" prompt)*] "]" ":" NUMBER (WHITESPACE* step_range_list)? (WHITESPACE* reverse_flag)?
 reverse_flag: "reverse" | "r"
@@ -434,7 +435,6 @@ plain: /([^\\[\]\{\}\(\),&:!|]|\\.)+/
 %import common.SIGNED_NUMBER -> NUMBER
 %import common.INT -> NUMBER_Q
 """
-# Варианты планирования: число может быть до или после закрывающей скобки
 
 schedule_parser = lark.Lark(_grammar, start="start")
 
@@ -1371,6 +1371,10 @@ class CollectSteps(lark.Visitor):
         vals = []
         last_sep = True
         for child in tree.children:
+            if child is None:
+                vals.append("")
+                last_sep = False
+                continue
             if isinstance(child, lark.Token) and child.type == "WHITESPACE":
                 continue
             tok = str(child).strip()
@@ -1381,9 +1385,21 @@ class CollectSteps(lark.Visitor):
                 continue
             child_schedules = self.visit(child)
             if child_schedules:
-                vals.append(child_schedules[0][1])
+                # Если дочерний узел сам даёт несколько вариантов (например alternate1),
+                # учитываем их все, сохраняя порядок.
+                dedup_vals: list[str] = []
+                for _, t in child_schedules:
+                    if not dedup_vals or dedup_vals[-1] != t:
+                        dedup_vals.append(t)
+                child_vals = []
+                for t in dedup_vals:
+                    if t not in child_vals:
+                        child_vals.append(t)
             else:
-                vals.append(resolve_tree(child, keep_spacing=True))
+                child_vals = [resolve_tree(child, keep_spacing=True)]
+            if not child_vals:
+                child_vals = [""]
+            vals.extend(child_vals)
             last_sep = False
 
         if last_sep:
@@ -1709,8 +1725,11 @@ def _apply_and(text: str) -> str:
 
     # 3) Схлопнуть множественные пробелы
     text = _re_ws_collapse.sub(" ", text)
-    
-    # 4) В самом конце заменяем & на "and" для вывода (если нужно)
+
+    # 4) Разэкранируем литералы перед финальной отдачей
+    text = _unescape_literals(text)
+
+    # 5) В самом конце заменяем & на "and" для вывода (если нужно)
     # Это делается только при финальной отдаче пользователю
     return text
 
@@ -1842,16 +1861,35 @@ def _get_schedule_impl(prompt: str, steps: int, use_scheduling: bool, seed: int 
         m_res = _extract_after_with_ranges(prompt, steps)
         if m_res:
             prompts, ranges, rev_flag, _first_is_percent = m_res
+            prompt_list = list(prompts) if prompts else [""]
             if rev_flag:
-                prompts = list(reversed(prompts))
-            schedules = []
+                prompt_list = list(reversed(prompt_list))
 
-            if ranges and ranges[0][0] > 1:
-                schedules.append([ranges[0][0] - 1, ""])
-            for i, (start, end) in enumerate(ranges[:len(prompts)]):
-                schedules.append([min(end, steps), prompts[i]])
-            if ranges and ranges[-1][1] < steps and prompts:
-                schedules.append([steps, prompts[-1]])
+            schedules: list[list[int, str]] = []
+
+            def _append(end: int, text: str) -> None:
+                if schedules and schedules[-1][1] == text:
+                    schedules[-1][0] = min(end, steps)
+                else:
+                    schedules.append([min(end, steps), text])
+
+            current = 1
+            for idx, (start, end) in enumerate(ranges):
+                if start > steps:
+                    break
+
+                if start > current:
+                    _append(start - 1, "")
+
+                prompt_text = prompt_list[idx % len(prompt_list)]
+                _append(min(end, steps), prompt_text)
+                current = min(end + 1, steps + 1)
+                if current > steps:
+                    break
+
+            if current <= steps:
+                _append(steps, "")
+
             return [[e, _apply_and(_collapse_spaces(t))] for e, t in schedules]
 
     # НОВЫЙ fast-path: "[...:N]" (число/доля *внутри* скобок)
@@ -2028,6 +2066,9 @@ def _parse_prompt_attention_impl(text):
     # FIX: нормализуем и реальный таб, и литерал таба до пробелов ДО токенизации
     text = text.replace('\n', ' ').replace('\t', ' ')
     text = text.replace('\\n', ' ').replace('\\t', ' ')
+
+    # Нормализуем AND → & и пробелы перед токенизацией
+    text = _apply_and(text)
 
     res = []
     round_brackets = []
@@ -2670,4 +2711,3 @@ def visualize_schedule(text: str, steps: int = 20, seed: int | None = None) -> s
         out_lines.append(f"Шаги {start}-{end}: {t}")
         prev_end = end
     return "\n".join(out_lines)
-
