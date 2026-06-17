@@ -1,0 +1,1237 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>prompt_parser_fixed_v21 — Полная документация грамматик, backend-блоков и builder</title>
+  <style>
+    :root {
+      --bg: #f5f4ef;
+      --panel: #fffdf7;
+      --ink: #1f2229;
+      --muted: #596274;
+      --accent: #0b6a5b;
+      --accent-2: #bf4d2a;
+      --line: #d9d4c8;
+      --warn: #7a2f2f;
+      --ok: #1f6b35;
+      --code-bg: #efeae0;
+      --shadow: 0 6px 22px rgba(10, 20, 30, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: "Segoe UI", "Trebuchet MS", "Verdana", sans-serif;
+      line-height: 1.52;
+    }
+    .wrap {
+      width: min(1320px, 96vw);
+      margin: 22px auto 40px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 1080px) {
+      .wrap { grid-template-columns: 1fr; }
+      .toc { position: static; }
+    }
+    .toc {
+      position: sticky;
+      top: 12px;
+      align-self: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      box-shadow: var(--shadow);
+    }
+    .toc h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .toc a {
+      color: var(--ink);
+      text-decoration: none;
+      display: block;
+      padding: 4px 0;
+      border-bottom: 1px dashed transparent;
+      font-size: 14px;
+    }
+    .toc a:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    main {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px 24px 26px;
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 2.6vw, 38px);
+      line-height: 1.15;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .badge-row {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .badge {
+      border: 1px solid var(--line);
+      background: #faf7ef;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      color: #465061;
+    }
+
+    section {
+      margin-top: 24px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 17px;
+      color: var(--accent);
+    }
+    p, li { font-size: 15px; }
+    .note {
+      border-left: 4px solid var(--accent-2);
+      background: #fff2ec;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    .ok {
+      border-left-color: var(--ok);
+      background: #edf8ef;
+    }
+    .warn {
+      border-left-color: var(--warn);
+      background: #fceeee;
+    }
+
+    code, pre {
+      font-family: "Consolas", "Cascadia Mono", "Fira Code", monospace;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid #d5cfc2;
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 10px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 9px;
+      vertical-align: top;
+    }
+    th {
+      background: #f2ece1;
+      text-align: left;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #415062;
+    }
+    .mini {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 10px 0 12px;
+    }
+    .flow .node {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      background: #fbf8f1;
+      text-align: center;
+      font-size: 13px;
+    }
+    .timeline {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .timeline .row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+    .timeline .row:first-child { border-top: 0; }
+    .timeline .row > div { padding: 8px 10px; }
+    .timeline .row .k {
+      background: #f4eee2;
+      color: #384357;
+      font-weight: 600;
+    }
+    .quick {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .quick .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fcf9f2;
+      padding: 10px;
+    }
+    .pro-builder {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fcfaf4;
+      padding: 12px;
+    }
+    .pb-toolbar {
+      border: 1px solid #d6d0c2;
+      border-radius: 10px;
+      background: #fffef9;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .pb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .pb-grid label {
+      display: grid;
+      gap: 4px;
+      font-size: 12px;
+      color: #4d566a;
+    }
+    .pb-grid input,
+    .pb-grid select,
+    .pb-grid textarea {
+      width: 100%;
+      border: 1px solid #cdc6b8;
+      border-radius: 8px;
+      padding: 7px 8px;
+      background: #fff;
+      color: #233149;
+      font: inherit;
+      font-size: 13px;
+    }
+    .pb-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .pb-btn {
+      border: 1px solid #c7bfaf;
+      border-radius: 8px;
+      background: #fff;
+      color: #2f3f59;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .pb-btn:hover {
+      border-color: #829688;
+      color: var(--accent);
+    }
+    .pb-status {
+      font-size: 12px;
+      color: #55647d;
+    }
+    .pb-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+    .pb-palette .pb-btn {
+      border-radius: 999px;
+      background: #faf7ef;
+    }
+    .pb-workspace {
+      border: 1px solid #d6d0c2;
+      border-radius: 10px;
+      background: #fffef9;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .pb-workspace h3 {
+      margin: 0 0 8px;
+      color: #364462;
+      font-size: 14px;
+    }
+    .pb-blocks {
+      display: grid;
+      gap: 8px;
+    }
+    .pb-block {
+      border: 1px solid #d7d1c3;
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 8px;
+    }
+    .pb-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      font-size: 12px;
+      color: #56637b;
+    }
+    .pb-head strong {
+      color: #22344e;
+      font-size: 13px;
+    }
+    .pb-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .pb-actions button {
+      border: 1px solid #d4cebf;
+      border-radius: 7px;
+      background: #faf7ef;
+      padding: 4px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #3f4f67;
+    }
+    .pb-actions button:hover {
+      color: var(--accent);
+      border-color: #829688;
+    }
+    .pb-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .pb-tab {
+      border: 1px solid #cfc8b9;
+      border-radius: 999px;
+      background: #f6f1e7;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #43536e;
+    }
+    .pb-tab.active {
+      border-color: #5e8477;
+      color: #1f5d51;
+      background: #e7f1ee;
+    }
+    .pb-panel {
+      display: none;
+      border: 1px solid #d6d0c2;
+      border-radius: 10px;
+      background: #fffef9;
+      padding: 10px;
+    }
+    .pb-panel.active {
+      display: block;
+    }
+    .pb-output {
+      width: 100%;
+      min-height: 92px;
+      border: 1px solid #cdc6b8;
+      border-radius: 8px;
+      padding: 8px;
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      font-size: 13px;
+      color: #1d2e48;
+      background: #fff;
+      resize: vertical;
+    }
+    .pb-lint-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 14px;
+    }
+    .pb-lint-list li {
+      margin: 4px 0;
+    }
+    .pb-lint-list li.err { color: #8a2f2f; }
+    .pb-lint-list li.warn { color: #7a5b15; }
+    .pb-lint-list li.ok { color: #1f6b35; }
+    .pb-preview {
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      background: #fff;
+      border: 1px solid #cdc6b8;
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 84px;
+    }
+    .pb-help {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #586880;
+    }
+    .pb-template-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .pb-template-list .pb-btn {
+      border-radius: 999px;
+      background: #fffdf6;
+    }
+    @media (max-width: 760px) {
+      .pb-grid { grid-template-columns: 1fr; }
+    }
+    .footer {
+      margin-top: 24px;
+      color: #5f6a7c;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="toc">
+      <h2>Навигация</h2>
+      <a href="#scope">1. Область и точность</a>
+      <a href="#pipeline">2. Архитектура парсинга</a>
+      <a href="#lark">3. Полная Lark-грамматика</a>
+      <a href="#rules">4. Семантика всех правил</a>
+      <a href="#regex">5. Regex-грамматики и fast-path</a>
+      <a href="#attention">6. Грамматика attention</a>
+      <a href="#scheduling">7. Правила расписаний по шагам</a>
+      <a href="#flags">8. Свойства/флаги окружения</a>
+      <a href="#api">9. API и функции</a>
+      <a href="#assistant">10. Помощник-конструктор шаблонов</a>
+      <a href="#live-builder-link">11. Pro Builder</a>
+      <a href="#checklist">12. Чеклист «абсолютно точного знания»</a>
+      <a href="#v21">13. Дополнения v21+ (BIND2, BIND3, COMPOUND, SLERP, bezier/catmull, fix-pack)</a>
+      <a href="#choose-block">14. Как выбрать блок — быстрый guide по backend-блокам</a>
+      <a href="#lark-backend-guide">15. Гайд по Lark-грамматике и backend-интеграции</a>
+    </aside>
+
+    <main>
+      <header>
+        <h1>prompt_parser_fixed_v21: полный технический разбор + builder/backend дополнения</h1>
+        <p class="subtitle">
+          Документ синхронизирован с фактическим кодом файла <code>prompt_parser_fixed_v21.py</code>
+          и его текущим поведением на тестах и ручных прогонах.
+          Раздел 13 отдельно собирает новые backend-слои и крупные fix-pack изменения.
+        </p>
+        <div class="badge-row">
+          <span class="badge">Lark + Regex hybrid parser</span>
+          <span class="badge">Scheduler (inner/postfix/ranges)</span>
+          <span class="badge">Attention weights & delta syntax</span>
+          <span class="badge">AND-composition / multicond</span>
+          <span class="badge">Lint + explain + visualize</span>
+          <span class="badge">v21: nested interp + easing</span>
+          <span class="badge">v21: CHUNK backend</span>
+          <span class="badge">v21: POOL adjunct</span>
+          <span class="badge">v21: ASSEMBLE backend</span>
+          <span class="badge">v21: BLEND backend</span>
+          <span class="badge">v21: MORPH backend</span>
+          <span class="badge">v21: BIND adjunct</span>
+          <span class="badge">v21: BIND2 transpile → CHUNK</span>
+          <span class="badge">v21: BIND3 row-splice</span>
+          <span class="badge">v21: COMPOUND delta-encoding</span>
+          <span class="badge">Phase 2: nested backends (cross-type)</span>
+          <span class="badge">Phase 4: sequential backend segments</span>
+          <span class="badge">Phase 5: WARNING-level lint</span>
+          <span class="badge">tensor SLERP in MORPH</span>
+          <span class="badge">bezier/catmull easing</span>
+          <span class="badge">hybrid batch encoding</span>
+          <span class="badge">recursive dispatcher</span>
+          <span class="badge">BUG-1..6 + NEW-BUG-1..6 fixed</span>
+        </div>
+      </header>
+
+      <section id="scope">
+        <h2>1) Область и точность</h2>
+        <p>
+          Это «полный список грамматик и возможностей» для версии <code>prompt_parser_fixed_v21</code>:
+          включая Lark-правила, regex-правила, шаговые расписания, attention-парсинг, AND/мультикондишн,
+          строгую валидацию, а также новые conditioning/backend-слои <code>CHUNK</code>, <code>BLEND</code> и <code>MORPH</code>.
+        </p>
+        <div class="note ok">
+          В этом документе «грамматика» понимается в двух слоях:
+          формальная Lark-грамматика + регулярные синтаксические шаблоны, которые код обрабатывает до/после Lark.
+        </div>
+      </section>
+
+      <section id="pipeline">
+        <h2>2) Архитектура парсинга</h2>
+        <div class="flow">
+          <div class="node">1) Нормализация входа<br><span class="mini">AND, пробелы, scheduler-surface</span></div>
+          <div class="node">2) Fast-path<br><span class="mini">postfix/inner/ranges regex</span></div>
+          <div class="node">3) Lark parse<br><span class="mini">_grammar -> parse tree</span></div>
+          <div class="node">4) CollectSteps<br><span class="mini">семантика правил в schedule</span></div>
+          <div class="node">5) Финализация<br><span class="mini">collapse/unescape/AND cleanup</span></div>
+        </div>
+        <p><b>Ключевые этапы:</b></p>
+        <ol>
+          <li><code>_normalize_and_operators_for_parse</code>: приводит <code>AND</code> к внутреннему <code>&amp;</code> и защищает <code>\&amp;</code>.</li>
+          <li><code>_normalize_scheduler_surface_syntax</code>: канонизирует записи вроде <code>] : 10</code> в <code>]:10</code>.</li>
+          <li><code>_placeholderize_attention_interpolations</code> (v21): pre-pass для форм <code>(body:w0-&gt;w1)</code>, включая вложенные <code>()</code> и optional easing <code>~mode</code>.</li>
+          <li><code>_placeholderize_postfix_scheduled_blocks</code>: временно заменяет запятые в <code>[...]:N</code> внутри блока (чтобы Lark не ломался).</li>
+          <li><code>_try_fast_after_scheduler</code>: быстрый путь для <code>[...]:N</code> и <code>[...]:N a-b,c-d</code>.</li>
+          <li>Если fast-path не применим: Lark-парсинг + <code>CollectSteps</code>.</li>
+          <li><code>_expand_attention_interpolations</code> (v21): post-pass разворачивает маркеры интерполяции на каждом шаге активного интервала.</li>
+          <li><code>_finalize_schedules</code>: <code>_apply_and + _collapse_spaces</code>, возврат <code>[[end_step, text], ...]</code>.</li>
+        </ol>
+      </section>
+
+      <section id="lark">
+        <h2>3) Полная Lark-грамматика (как в коде)</h2>
+        <p class="mini">
+          <code>alternate</code> — динамическое правило: при <code>ALLOW_EMPTY_ALTERNATE=1</code>
+          разрешаются пустые варианты между <code>|</code>.
+        </p>
+        <p class="mini">
+          Важно: правило <code>compound</code> объявлено в grammar-блоке, но напрямую не включено в
+          <code>prompt</code>; на практике underscore-токены обычно проходят через <code>plain</code>.
+        </p>
+<pre>!start: (prompt | /[():,!|&]/+)*
+
+prompt: (scheduled | emphasized | grouped
+        | alternate | alternate_distinct
+        | alternate1 | alternate2
+        | top_level_sequence3 | top_level_sequence | sequence
+        | weighted | numbered | and_rule
+        | plain | WHITESPACE)*
+
+!emphasized: "(" prompt ")"
+           | "(" prompt ":" prompt ")"
+           | "(" prompt ":" NUMBER ")"
+
+!weighted: plain ":" NUMBER
+
+scheduled: "[" [prompt (":" prompt)* ":" NUMBER (WHITESPACE* step_range_list)?] "]" (WHITESPACE* reverse_flag)?
+        | "[" [prompt (":" prompt)*] "]" ":" NUMBER (WHITESPACE* step_range_list)? (WHITESPACE* reverse_flag)?
+reverse_flag: "reverse"
+step_range_list: step_range (WHITESPACE* "," WHITESPACE* step_range)*
+step_range: NUMBER "-" NUMBER        -&gt; range_abs
+          | NUMBER "%" "-" NUMBER "%" -&gt; range_pct
+
+alternate: "[" prompt ("|" [prompt])+ "]"            // if ALLOW_EMPTY_ALTERNATE=1
+alternate: "[" prompt ("|" prompt)* "]"              // if ALLOW_EMPTY_ALTERNATE=0
+
+!alternate_distinct: "[" prompt ("|" prompt)* "]!"
+alternate1: (prompt) "|" (prompt)+
+alternate2: plain ("|" plain)+
+
+grouped: "{" ((NUMBER_Q | prompt | sequence | grouped) ("," | "|")?)+ "}"
+
+top_level_sequence: prompt ("::" sequence)+ "!!" ("," plain)?
+top_level_sequence3: prompt ":::" (sequence | plain) (WHITESPACE* "," WHITESPACE* (sequence | plain))* "!!!" (WHITESPACE* "," WHITESPACE* (plain | sequence))*
+sequence: prompt "::" prompt ("," | WHITESPACE)* nested_sequence* ("!" | ";")?
+nested_sequence: "::" prompt ("," | WHITESPACE)* ("!" | ";" | "~")?
+
+compound: /[a-zA-Z0-9]+(_[a-zA-Z0-9]+)+/
+numbered: NUMBER_Q ("!" | "_")? (grouped | sequence | alternate | alternate_distinct | alternate2 | alternate1)
+
+and_rule: (plain | weighted | emphasized | numbered | grouped | alternate | alternate_distinct | alternate2 | alternate1 | scheduled) ("&" (plain | weighted | emphasized | numbered | grouped | alternate | alternate_distinct | alternate1 | scheduled))+
+WHITESPACE: /\s+/
+plain: /([^\\[\]\{\}\(\),&:!|]|\\.)+/
+
+%import common.SIGNED_NUMBER -&gt; NUMBER
+%import common.INT -&gt; NUMBER_Q</pre>
+      </section>
+
+      <section id="rules">
+        <h2>4) Семантика всех Lark-правил</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Правило</th>
+              <th>Что парсит</th>
+              <th>Что делает в семантике</th>
+              <th>Пример</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>start</code></td><td>Весь prompt + одиночные спецсимволы</td><td>Объединяет фрагменты, применяет спец-обработку sequence-форм</td><td><code>owner::a::b!!, tail</code></td></tr>
+            <tr><td><code>prompt</code></td><td>Главный контейнер узлов</td><td>Может содержать любые поддерживаемые конструкции и пробелы</td><td><code>scene [day:night:0.35] AND (moody:1.4)</code></td></tr>
+            <tr><td><code>emphasized</code></td><td><code>(x)</code>, <code>(x:n)</code>, <code>(x:y)</code></td><td>Форматирует в <code>(text:weight)</code>, дефолт 1.1, поддерживает число в экспоненциальной форме</td><td><code>(cat)</code> → <code>(cat:1.1)</code></td></tr>
+            <tr><td><code>weighted</code></td><td><code>plain:NUMBER</code></td><td>Преобразует в ту же форму, что emphasized: <code>(plain:number)</code></td><td><code>dog:1.4</code> → <code>(dog:1.4)</code></td></tr>
+            <tr><td><code>scheduled</code></td><td>Inner/postfix scheduler + ranges + reverse</td><td>Строит расписание по шагам: boundary mode или ranges mode</td><td><code>[a:b]:10 1-4,6-8 reverse</code></td></tr>
+            <tr><td><code>reverse_flag</code></td><td>Слово <code>reverse</code></td><td>Разворачивает порядок prompt-частей scheduler</td><td><code>[a:b:4] reverse</code></td></tr>
+            <tr><td><code>step_range_list</code></td><td>Список диапазонов</td><td>Диапазоны применяются в исходном порядке, политика overlap: last-wins</td><td><code>1-4,6-8</code></td></tr>
+            <tr><td><code>range_abs</code>/<code>range_pct</code></td><td>Абсолютные/процентные диапазоны</td><td>Проценты переводятся в шаги, потом clamp в <code>[1..steps]</code></td><td><code>10%-50%</code></td></tr>
+            <tr><td><code>alternate</code></td><td><code>[a|b|c]</code> (+ пустые варианты)</td><td>При <code>EXPAND_ALTERNATE_PER_STEP=1</code> циклическая смена по шагам; иначе один случайный выбор</td><td><code>[a|b|c]</code> → <code>a,b,c,a,...</code></td></tr>
+            <tr><td><code>alternate_distinct</code></td><td><code>[a|b|c]!</code></td><td>Выбирает один вариант случайно на весь prompt</td><td><code>[cat|dog|fox]!</code></td></tr>
+            <tr><td><code>alternate1</code></td><td><code>a|b|c</code> (вне <code>[]</code>)</td><td>Поддержка простых разделителей <code>|</code> с поведением, аналогичным alternate</td><td><code>a | b | c</code></td></tr>
+            <tr><td><code>alternate2</code></td><td><code>plain|plain|...</code></td><td>Собирает текст с <code>|</code>, умеет авто-добавлять суффикс после <code>_</code> из первого варианта</td><td><code>red_hair|blue|green</code></td></tr>
+            <tr><td><code>grouped</code></td><td><code>{...}</code> группы/комбинации</td><td>Генерирует комбинации через декартово произведение, с ограничением <code>GROUP_COMBO_LIMIT</code></td><td><code>{[a|b],[c|d]}</code></td></tr>
+            <tr><td><code>top_level_sequence</code></td><td><code>owner::a::b!!, tail</code></td><td>Формирует <code>owner -&gt; owner: a, owner: b, tail</code></td><td>см. пример ниже</td></tr>
+            <tr><td><code>top_level_sequence3</code></td><td><code>owner::: ... !!! ...</code></td><td>Левая часть принудительно под owner, правая после <code>!!!</code> сохраняет собственных owners</td><td><code>owner::: stance::strong!!!, light::soft!</code></td></tr>
+            <tr><td><code>sequence</code></td><td><code>owner::tag::detail!</code></td><td>Делает <code>owner: tag, detail</code></td><td><code>owner::pose::style!</code></td></tr>
+            <tr><td><code>nested_sequence</code></td><td>Вложенные <code>::</code> + терминатор</td><td>Если терминатор <code>~</code>, выбирает случайный элемент; иначе перечисляет</td><td><code>::a::b~</code></td></tr>
+            <tr><td><code>compound</code></td><td><code>a_b_c</code></td><td>Формально объявлен; напрямую не подключен к <code>prompt</code> (фактически роль берет <code>plain</code>)</td><td><code>ultra_detail_mode</code></td></tr>
+            <tr><td><code>numbered</code></td><td><code>N[...]</code>, <code>N![...]</code>, <code>N_[...]</code></td><td>Выбирает N элементов; <code>!</code>/<code>_</code> включает distinct-режим</td><td><code>3[a|b|c]</code>, <code>3![a|b|c]</code></td></tr>
+            <tr><td><code>and_rule</code></td><td>Связки через <code>&amp;</code></td><td>Нормализует и склеивает в <code>part1 &amp; part2 ...</code></td><td><code>cat AND dog</code> → <code>cat &amp; dog</code></td></tr>
+            <tr><td><code>plain</code></td><td>Обычный текст (без спецсимволов)</td><td>Поддерживает escape <code>\\.</code>, исключает необработанные <code>, &amp; : ! | []{}()</code></td><td><code>photo_realistic</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Фактические примеры расписаний (из выполнения кода)</h3>
+<pre>a [b:3], steps=10
+=> [[3, "a"], [10, "a b"]]
+
+[a:b:4], steps=6
+=> [[2, "a"], [4, "b"], [6, "b"]]
+
+[a:b]:10 1-4,6-8 reverse, steps=12
+=> [[4, "b"], [5, ""], [8, "a"], [12, ""]]
+
+X [a::4] Y, steps=6
+=> [[1, "X Y"], [2, "X a Y"], [4, "X Y"], [6, "X Y"]]
+
+owner::a::b!!, tail
+=> [[12, "owner -> owner: a, owner: b, tail"]]</pre>
+      </section>
+
+      <section id="regex">
+        <h2>5) Regex-грамматики и fast-path (вне Lark)</h2>
+        <h3>5.1 Числовая подграмматика</h3>
+        <table>
+          <thead><tr><th>Имя</th><th>Шаблон</th><th>Назначение</th></tr></thead>
+          <tbody>
+            <tr><td><code>NUMERIC_RE</code></td><td><code>[-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?</code></td><td>Единый шаблон числа для всех грамматик</td></tr>
+            <tr><td><code>RE_NUMERIC</code></td><td>compiled NUMERIC_RE</td><td>Быстрый поиск числа</td></tr>
+            <tr><td><code>RE_NUMERIC_FULL</code></td><td><code>^(?:NUMERIC_RE)$</code></td><td>Проверка «вся строка — число»</td></tr>
+          </tbody>
+        </table>
+
+        <h3>5.2 Fast-path для scheduler</h3>
+        <table>
+          <thead><tr><th>Regex</th><th>Что распознает</th><th>Комментарий</th></tr></thead>
+          <tbody>
+            <tr><td><code>RE_BRACKET_AFTER</code></td><td><code>prefix [inner] : N [reverse] postfix</code></td><td>Postfix scheduler с контекстом до/после</td></tr>
+            <tr><td><code>RE_BRACKET_AFTER_WITH_RANGES</code></td><td><code>[inner]:N a-b,c-d [reverse]</code></td><td>Ranges mode, включая <code>%</code>-диапазоны</td></tr>
+            <tr><td><code>RE_REVERSE_PREFIX</code></td><td><code>^reverse ...</code></td><td>Распознает reverse в начале postfix</td></tr>
+            <tr><td><code>RE_REVERSE_SUFFIX</code></td><td><code>... reverse$</code></td><td>Распознает reverse в конце postfix</td></tr>
+            <tr><td><code>_RE_POSTFIX_STEP_COLON_SPACING</code></td><td><code>] : N</code></td><td>Нормализует в <code>]:N</code></td></tr>
+            <tr><td><code>_RE_LITERAL_REVERSE_AFTER_RANGES</code></td><td><code>... ranges reverse word</code></td><td>Сохраняет literal <code>reverse</code> как текст (не флаг)</td></tr>
+            <tr><td><code>_RE_UNESCAPED_ALT_OR_BANG</code></td><td>неэкранированные <code>|</code> или <code>!</code></td><td>Флаг «нужен сложный parse, fast-path не годится»</td></tr>
+            <tr><td><code>_RE_POST_STEP_RANGES</code></td><td>postfix диапазонный хвост</td><td>Отключает неправильные fast-path ветки</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note warn">
+          Строгое правило: обратные диапазоны <code>8-4</code> не исправляются молча и не интерпретируются «как-нибудь».
+          Выбрасывается <code>PromptSyntaxError(kind="reverse_range")</code>.
+        </div>
+
+        <h3>5.3 Interpolation (v21): pre-pass scanner + easing</h3>
+        <table>
+          <thead><tr><th>Компонент</th><th>Назначение</th><th>Ключевая семантика</th></tr></thead>
+          <tbody>
+            <tr><td><code>_placeholderize_attention_interpolations</code></td><td>Балансный сканер <code>(...)</code></td><td>Поддерживает вложенные <code>()</code>, ищет последний top-level <code>:</code>, валидирует хвост <code>w0-&gt;w1[~mode]</code></td></tr>
+            <tr><td><code>_RE_ATT_INTERP_TAIL</code></td><td>Парсинг хвоста интерполяции</td><td><code>w0-&gt;w1</code> + optional <code>~mode</code>; mode case-insensitive, unknown =&gt; <code>linear</code></td></tr>
+            <tr><td><code>RE_ATTN_INTERP_LITERAL</code></td><td>Чтение сериализованного маркера</td><td>Совместим со старым форматом (без mode) и новым (с mode)</td></tr>
+            <tr><td><code>_apply_easing</code></td><td>Кривая изменения <code>t</code></td><td><code>linear</code>, <code>ease-in</code>, <code>ease-out</code>, <code>ease-in-out</code></td></tr>
+            <tr><td><code>_expand_attention_interpolations</code></td><td>Post-pass развёртка по шагам</td><td>Контекстно-осознанно: интерполяция идёт по локальному активному сегменту, а не по всему 1..steps</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="attention">
+        <h2>6) Грамматика attention (parse_prompt_attention)</h2>
+        <p>
+          Это отдельный парсер внимания/весов: работает токенизацией через
+          <code>re_attention</code> и последующей семантической обработкой.
+        </p>
+
+        <h3>6.1 Токены re_attention</h3>
+<pre>\\\(, \\\), \\\[, \\\], \\\\, \\\\,
+\(, \[,
+:\s*(x?NUMERIC_RE)\s*\),   // вес в круглых скобках, включая xN.M
+\), ],
+[^\\()\[\]:\s]+, \s+, :</pre>
+
+        <h3>6.2 Поддерживаемые конструкции</h3>
+        <table>
+          <thead><tr><th>Форма</th><th>Смысл</th><th>Реальный результат</th></tr></thead>
+          <tbody>
+            <tr><td><code>(cat)</code></td><td>Умножение веса на 1.1</td><td><code>[["cat", 1.1]]</code></td></tr>
+            <tr><td><code>[cat]</code></td><td>Ослабление веса на 1/1.1</td><td><code>~0.9091</code></td></tr>
+            <tr><td><code>(cat:2)</code></td><td>Явный вес внутри скобок</td><td><code>[["cat", 2.0]]</code></td></tr>
+            <tr><td><code>(cat:x3.2)</code></td><td>Повтор токена: 3 копии, хвостовой коэффициент 1.2</td><td><code>[["cat cat",1.0],["cat",1.2]]</code></td></tr>
+            <tr><td><code>word:1.4</code></td><td>Inline абсолютный вес</td><td><code>[["word",1.4]]</code></td></tr>
+            <tr><td><code>word +0.2</code></td><td>Delta-режим (по умолчанию absolute)</td><td><code>[["word",0.2]]</code></td></tr>
+            <tr><td><code>word -0.1</code></td><td>Отрицательная дельта</td><td><code>[["word",-0.1]]</code></td></tr>
+            <tr><td><code>BREAK</code></td><td>Спец-разделитель</td><td>Внутренний токен <code>["BREAK",-1]</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>6.3 Colon-state автомат</h3>
+        <p>
+          Внутренний <code>_ColonState</code> отслеживает двоеточие вне скобок:
+          ждёт число после <code>:</code>; если число не пришло, двоеточие возвращается в текст.
+          Это предотвращает ложное взвешивание при обычных текстовых двоеточиях.
+        </p>
+
+        <h3>6.4 Inline regex для attention</h3>
+        <table>
+          <thead><tr><th>Regex</th><th>Роль</th></tr></thead>
+          <tbody>
+            <tr><td><code>RX_FIX_ATT_WEIGHT</code></td><td>Ремонт кейса <code>word : number</code> (с пробелами вокруг <code>:</code>)</td></tr>
+            <tr><td><code>RX_DELTA_TOKEN</code></td><td>Распознавание чистого delta-токена (<code>+0.2</code>, <code>-0.1</code>)</td></tr>
+            <tr><td><code>RX_INLINE_ATT</code></td><td>Inline форма <code>word:weight</code> или <code>word+delta</code> внутри одного текстового чанка</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="scheduling">
+        <h2>7) Правила расписаний по шагам</h2>
+        <h3>7.1 Boundary интерпретация</h3>
+        <ul>
+          <li>Если форма записана как <code>N%</code> → процент от общего числа шагов.</li>
+          <li>Если <code>0 &lt; N &lt; 1</code> → доля от steps (например <code>0.35</code> при 20 шагах ≈ 7).</li>
+          <li>Если <code>N &gt;= 1</code> → абсолютный шаг. Это важно: <code>1</code> и <code>1.0</code> в v21 больше не трактуются как <code>100%</code>.</li>
+          <li>После вычисления всегда <code>clamp</code> в диапазон <code>[1..steps]</code>.</li>
+        </ul>
+
+        <h3>7.2 Политика ranges</h3>
+        <ul>
+          <li>Диапазоны применяются в порядке записи.</li>
+          <li>Перекрытие: <b>последний диапазон перезаписывает предыдущий</b> (last-wins).</li>
+          <li><code>start == end</code> разрешен (один шаг).</li>
+          <li><code>start &gt; end</code> — ошибка синтаксиса (<code>reverse_range</code>).</li>
+        </ul>
+
+        <h3>7.3 Визуальный образ (timeline)</h3>
+        <p><code>prompt = [a:b]:10 1-4,6-8</code>, <code>steps=12</code>:</p>
+        <div class="timeline">
+          <div class="row"><div class="k">Шаги 1-4</div><div><code>a</code></div></div>
+          <div class="row"><div class="k">Шаг 5</div><div><code>""</code> (пусто)</div></div>
+          <div class="row"><div class="k">Шаги 6-8</div><div><code>b</code></div></div>
+          <div class="row"><div class="k">Шаги 9-12</div><div><code>""</code> (пусто)</div></div>
+        </div>
+
+        <h3>7.4 Префикс/суффикс и пустые сегменты</h3>
+        <p>
+          Для формы с контекстом типа <code>X [a::4] Y</code> пустые внутренние сегменты
+          не удаляются; они превращаются в валидный текст <code>X Y</code>, что важно для SD-практики.
+        </p>
+      </section>
+
+      <section id="flags">
+        <h2>8) Свойства и флаги окружения</h2>
+        <table>
+          <thead>
+            <tr><th>Флаг</th><th>По умолчанию</th><th>Влияние</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>ALLOW_EMPTY_ALTERNATE</code></td><td><code>1</code></td><td>Разрешает пустые альтернативы в <code>[a||c]</code></td></tr>
+            <tr><td><code>EXPAND_ALTERNATE_PER_STEP</code></td><td><code>1</code></td><td>Циклическая смена альтернатив по шагам</td></tr>
+            <tr><td><code>GROUP_COMBO_LIMIT</code></td><td><code>100</code></td><td>Лимит комбинаций для <code>{...}</code></td></tr>
+            <tr><td><code>GROUP_COMBO_FALLBACK</code></td><td><code>truncate</code></td><td>Поведение при превышении лимита: <code>truncate|literal|sample</code></td></tr>
+            <tr><td><code>DEDUP_SCHEDULE_STEPS</code></td><td><code>0</code></td><td>Удаление дублей по шагам в финальном schedule</td></tr>
+            <tr><td><code>SUPPRESS_STANDALONE_COLON</code></td><td><code>1</code></td><td>Скрывает standalone <code>:</code> в attention-парсере, если это не вес</td></tr>
+            <tr><td><code>ATTENTION_DELTA_ADDITIVE</code></td><td><code>0</code></td><td>Delta-семантика: absolute (0) или additive (1)</td></tr>
+            <tr><td><code>PROMPT_PARSER_CACHE_SIZE</code></td><td><code>4096</code></td><td>Размер LRU-кэшей parser/attention/schedule</td></tr>
+            <tr><td><code>PROMPT_PARSER_RECURSION_LIMIT</code></td><td><code>0</code></td><td>Опциональная установка recursion limit</td></tr>
+          </tbody>
+        </table>
+        <div class="note">
+          Easing режимы в v21 не требуют отдельных env-флагов:
+          выбираются прямо в синтаксисе интерполяции через суффикс <code>~mode</code>.
+        </div>
+      </section>
+
+      <section id="api">
+        <h2>9) API и функции (что, как и зачем)</h2>
+        <h3>9.1 Основной API</h3>
+        <table>
+          <thead><tr><th>Функция</th><th>Назначение</th><th>Что возвращает</th></tr></thead>
+          <tbody>
+            <tr><td><code>get_schedule(prompt, steps, use_scheduling, seed, use_visitor)</code></td><td>Главная точка входа scheduler-парсинга</td><td><code>[[end_step, text], ...]</code></td></tr>
+            <tr><td><code>at_step(step, prompt_or_schedule, ...)</code></td><td>Текст prompt на конкретном шаге</td><td><code>str</code></td></tr>
+            <tr><td><code>parse_prompt_attention(text)</code></td><td>Разбор attention-весов и спец-форм</td><td><code>[[token, weight], ...]</code></td></tr>
+            <tr><td><code>lint_prompt(text, steps, seed)</code></td><td>Строгая dry-run проверка синтаксиса</td><td><code>dict</code> с <code>ok/kind/pos/token/fix_suggestion</code></td></tr>
+            <tr><td><code>explain_syntax_error(text)</code></td><td>Человекочитаемое сообщение об ошибке</td><td><code>str</code></td></tr>
+            <tr><td><code>visualize_schedule(text, steps, seed)</code></td><td>Текстовая визуализация интервалов</td><td><code>str</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>9.2 Стратегия выполнения get_schedule</h3>
+        <ol>
+          <li>Валидация входа (<code>_validate_inputs</code>).</li>
+          <li>Нормализация prompt (AND/scheduler-surface).</li>
+          <li>Серия fast-path веток (TL3, numbered-alt, inner/postfix/ranges).</li>
+          <li>При необходимости Lark parse + <code>CollectSteps</code>.</li>
+          <li>Финализация и (опционально) сворачивание в один сегмент, если <code>use_scheduling=False</code>.</li>
+        </ol>
+
+        <h3>9.3 Seed и детерминизм</h3>
+        <ul>
+          <li>Если <code>seed=None</code>, используется стабильный <code>sha256</code>-seed от prompt.</li>
+          <li>Кэш возвращает копию (defensive copy), чтобы внешняя мутация не портила кэш.</li>
+        </ul>
+
+        <h3>9.4 Мультикондишн grammar-слой</h3>
+        <ul>
+          <li><code>get_multicond_prompt_list</code> в v21 использует top-level split по <code>AND</code> и standalone <code>&amp;</code>, а не тупой split по сырой строке.</li>
+          <li>Split уважает вложенность скобок и escape, поэтому случаи вроде <code>(cat AND dog:1.2)</code> и <code>\(cat AND dog\)</code> не разваливаются на неправильные куски.</li>
+          <li><code>RE_END_WEIGHT</code> понимает вес в конце подпромпта (<code>text:1.2</code>, включая китайский двоеточие).</li>
+          <li>Это означает, что top-level <code>AND</code> уже поддерживает контролируемые веса веток: например, <code>style:0.7 AND character:1.3</code> даёт две composable ветки с разным весом, а не attention внутри одной строки.</li>
+          <li><code>get_multicond_prompt_list</code> строит плоский словарь подпромптов + веса.</li>
+        </ul>
+
+        <h3>9.5 Новые внутренние функции v21 (interpolation/easing)</h3>
+        <table>
+          <thead><tr><th>Функция</th><th>Роль</th><th>Примечание</th></tr></thead>
+          <tbody>
+            <tr><td><code>_placeholderize_attention_interpolations(text)</code></td><td>Pre-pass маркеризация интерполяций</td><td>Поддержка nested <code>()</code> и <code>~mode</code></td></tr>
+            <tr><td><code>_serialize_att_interp(body, w0, w1, mode)</code></td><td>Сериализация маркера</td><td>Mode опционален для backward compatibility</td></tr>
+            <tr><td><code>_apply_easing(t, mode)</code></td><td>Преобразование линейного t в easing-кривую</td><td>Unknown mode =&gt; <code>linear</code></td></tr>
+            <tr><td><code>_expand_att_interp_text_for_step(...)</code></td><td>Расчёт веса на шаге</td><td>Формула: <code>w = w0 + (w1-w0) * eased_t</code></td></tr>
+            <tr><td><code>_expand_attention_interpolations(schedule, steps)</code></td><td>Пост-обработка schedule</td><td>Не трогает сегменты без маркеров (fast-path)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="assistant">
+        <h2>10) Прямой помощник-конструктор шаблонов</h2>
+        <p>
+          Ниже спецификация «строгого помощника», который должен знать парсер полностью
+          и помогать пользователю собирать корректные форматы быстрее.
+        </p>
+
+        <div class="quick">
+          <div class="card">
+            <h3>A. Конструктор формы</h3>
+            <p>Выбирает шаблон: plain, emphasized, scheduler, ranges, alternate, sequence, AND, multicond.</p>
+          </div>
+          <div class="card">
+            <h3>B. Валидатор до запуска</h3>
+            <p>Сразу прогоняет <code>lint_prompt</code>, показывает <code>kind/pos/end/token</code> и автопочинку (например <code>8-4</code> → <code>4-8</code>).</p>
+          </div>
+          <div class="card">
+            <h3>C. Предпросмотр шагов</h3>
+            <p>Показывает <code>visualize_schedule</code> и конкретный <code>at_step</code> для выбранных шагов.</p>
+          </div>
+          <div class="card">
+            <h3>D. Режим «без потерь»</h3>
+            <p>Никогда не удаляет экранирование и не заменяет лексемы без согласования, только явные безопасные трансформации.</p>
+          </div>
+        </div>
+
+        <h3>Минимальный сценарий работы помощника</h3>
+        <ol>
+          <li>Определить цель: статический prompt или scheduler.</li>
+          <li>Предложить 2-3 валидных шаблона для этой цели.</li>
+          <li>Собрать заполненный prompt с подсветкой грамматики.</li>
+          <li>Показать расписание, ошибки, и безопасные правки.</li>
+          <li>Выдать итог + «почему так» (семантика шагов и весов).</li>
+        </ol>
+      </section>
+
+
+      <section id="live-builder-link">
+        <h2>11) Pro Builder (hybrid_orig-уровень, встроен в документ)</h2>
+        <p>
+          Полноценный конструктор для <code>prompt_parser_fixed_v21</code> встроен прямо ниже через iframe.
+          Это обновлённый builder под текущую семантику <code>v21</code>: он знает старые grammar-блоки, а также новые conditioning/backend-конструкции <code>Interp</code>, <code>POOL</code>, <code>BIND</code>, <code>CHUNK</code>, <code>BLEND</code> и <code>MORPH</code>.
+        </p>
+        <div class="note ok">
+          Workflow профессионального режима:
+          <b>сборка блоками → быстрый просмотр результата → итерация весов/шагов → финальный prompt</b>.
+        </div>
+        <div class="pro-builder">
+          <div class="pb-row" style="margin-bottom:8px;">
+            <a class="pb-btn" href="parser_fixed_21_builder.html" target="_blank" rel="noopener noreferrer">Открыть Builder отдельно</a>
+            <span class="pb-status">Если iframe не загрузится из-за политики браузера, используйте кнопку выше.</span>
+          </div>
+          <iframe
+            title="Prompt Parser Fixed Pro Builder"
+            src="parser_fixed_21_builder.html"
+            style="width:100%;min-height:900px;border:1px solid #d6d0c2;border-radius:10px;background:#fff;">
+          </iframe>
+          <div class="pb-help">
+            Встроенный builder уже включает: multilingual UI, block-based редактор, presets, copy/export,
+            sequence/hybrid/schedule/alternate/alternate1/alternate2 режимы, операторы <code>AND</code>/<code>BREAK</code>,
+            блоки <code>Interp</code>, <code>POOL</code>, <code>CHUNK</code>, <code>BLEND</code>, <code>MORPH</code>, а также шаговый timeline-preview.
+            В schedule builder уже учитывает новую boundary-семантику v21: <code>1</code> — это шаг 1, а не <code>100%</code>.
+          </div>
+          <h3>Покрытие грамматик в Builder</h3>
+          <table>
+            <thead><tr><th>Грамматика</th><th>Поддержка в Builder</th><th>Как использовать</th></tr></thead>
+            <tbody>
+              <tr><td><code>plain</code></td><td>Да</td><td>Блок <code>Text</code></td></tr>
+              <tr><td><code>emphasized</code>/<code>weighted</code></td><td>Да</td><td>Вес в блоках текста/гибрида</td></tr>
+              <tr><td><code>scheduled</code> inner/postfix + ranges/reverse</td><td>Да</td><td>Блок <code>Schedule</code> с переключением режима и helper для интервалов</td></tr>
+              <tr><td><code>step_range_list</code></td><td>Да</td><td>Есть быстрые кнопки диапазонов + ручной ввод <code>from/to/%</code> + чипы удаления</td></tr>
+              <tr><td><code>alternate</code> / <code>numbered</code></td><td>Да</td><td>Блок <code>Alternate</code></td></tr>
+              <tr><td><code>alternate1</code></td><td>Да</td><td>Отдельный блок <code>Alternate1</code> (pipe-формат без скобок)</td></tr>
+              <tr><td><code>alternate2</code></td><td>Да</td><td>Отдельный блок <code>Alternate2</code> + визуализация parser-normalized суффикса</td></tr>
+              <tr><td><code>(body:w0-&gt;w1~mode)</code></td><td>Да</td><td>Отдельный блок <code>Interp</code> с easing и шаговым preview</td></tr>
+              <tr><td><code>POOL{prompt}</code></td><td>Да</td><td>Отдельный блок <code>POOL</code> для pooled/global side prompt без изменения base cross-attention</td></tr>
+              <tr><td><code>base prompt BIND{owner =&gt; attrs}</code> / <code>BIND^k{owner =&gt; attrs}</code></td><td>Да</td><td>Top-level owner-binding adjunct: создаёт скрытые composable ветки для owner-specific атрибутов и по умолчанию держит pooled/global anchor от base prompt</td></tr>
+              <tr><td><code>CHUNK{branch*weight | ...}</code></td><td>Да</td><td>Отдельный блок <code>CHUNK</code> с prefix/suffix и BREAK-preview</td></tr>
+              <tr><td><code>BLEND^k[mode]{branch*weight | ...}</code></td><td>Да</td><td>Отдельный блок <code>BLEND</code> с режимами <code>mean/sum</code>, optional intensity и static backend-preview</td></tr>
+              <tr><td><code>MORPH^k{a*weight =&gt; b*weight@step ~ curve}</code> / <code>MORPH^k[start-end]{a*weight =&gt; b*weight}</code></td><td>Да</td><td>Отдельный блок <code>MORPH</code> с control points, optional point weights, curve, intensity и window-режимом</td></tr>
+              <tr><td><code>prefix CHUNK{...} middle MORPH{...}</code> / <code>prefix MORPH{...} middle CHUNK{...}</code></td><td>Да</td><td>Safe sugar: в одной AND-ветке можно поставить ровно один <code>CHUNK</code> и один <code>MORPH</code>; builder сериализует shorthand для CHUNK-distribution</td></tr>
+              <tr><td><code>sequence</code> / nested forms</td><td>Да</td><td>Блок <code>Sequence</code> (std/top/deep)</td></tr>
+              <tr><td><code>grouped</code></td><td>Да</td><td>Блок <code>Group</code></td></tr>
+              <tr><td><code>and_rule</code></td><td>Да</td><td>Спец-блок <code>AND</code></td></tr>
+              <tr><td><code>BREAK</code></td><td>Да</td><td>Спец-блок <code>BREAK</code></td></tr>
+              <tr><td>step timeline preview</td><td>Да</td><td>Отдельная панель с сегментами по шагам и дорожками Schedule/Interp/MORPH-блоков</td></tr>
+            </tbody>
+          </table>
+          <div class="note ok">
+            Builder теперь синхронизирован с v21 не только по старой grammar-части, но и по новым backend-слоям.
+            Он остаётся frontend-конструктором: финальную tensor-математику делают Python/backend-слои, а UI собирает корректный синтаксис для поддерживаемых builder-блоков и даёт безопасный preview.
+            В builder появился и отдельный pooled-only adjunct <code>POOL{...}</code>: он сериализуется как top-level side prompt, не считается отдельным backend-блоком и может сосуществовать с plain text или одним backend в той же AND-ветке.
+            Там же теперь есть и <code>ASSEMBLE{enc1=...; enc2=...; pooled=...}</code>: это top-level SDXL-style post-assemble backend, который собирает уже готовые <code>enc1 / enc2 / pooled</code> каналы из отдельно закодированных prompt-ов и не притворяется настоящим dual-encoder pre-encode routing.
+            В builder теперь есть и отдельный блок <code>BIND{owner =&gt; attrs}</code>: это owner-binding adjunct, который создаёт скрытые composable ветки и сильнее привязывает признаки к owner, чем plain text.
+            В том числе builder знает safe sugar-формы <code>CHUNK + tail MORPH</code> и <code>MORPH + tail CHUNK</code> в одной AND-ветке, если там ровно по одному такому backend-блоку и нет <code>BLEND</code>.
+            Важно: его lint остаётся эвристическим и не заменяет строгий Python <code>lint_prompt()</code> для всех raw-text edge cases.
+            Builder-preview при top-level <code>AND</code> вокруг backend-блоков теперь тоже раскладывается по отдельным веткам prompt и заметно ближе к Python multicond preview, но всё равно остаётся эвристическим UI-слоем, а не заменой runtime.
+          </div>
+        </div>
+      </section>
+
+      <section id="checklist">
+        <h2>12) Чеклист «абсолютно точного знания парсера»</h2>
+        <p>Помощник считается «полным», только если умеет объяснить и корректно применить:</p>
+        <ul>
+          <li>все Lark-правила из раздела 3, включая динамику <code>ALLOW_EMPTY_ALTERNATE</code>;</li>
+          <li>оба scheduler-синтаксиса: inner <code>[a:b:N]</code> и postfix <code>[a:b]:N</code>;</li>
+          <li>ranges режим с percent/absolute, last-wins, reverse-ошибкой;</li>
+          <li>отличие <code>reverse</code> как флага от literal слова <code>reverse</code> в тексте;</li>
+          <li>семантику attention: <code>()</code>, <code>[]</code>, <code>:xN.M</code>, <code>word:weight</code>, <code>+/-delta</code>;</li>
+          <li>v21 interpolation: <code>(body:w0-&gt;w1)</code> с nested body и локальной (segment-aware) развёрткой;</li>
+          <li>v21 easing: <code>~linear</code>, <code>~ease-in</code>, <code>~ease-out</code>, <code>~ease-in-out</code>, case-insensitive режимы;</li>
+          <li>v21 CHUNK backend: <code>CHUNK{branch*weight | ...}</code> и <code>CHUNK[share-pooled]</code>/<code>CHUNK[share-cross]</code>, один блок на ветку prompt; cross-type nested backends внутри веток поддержаны (MORPH/BLEND/POOL/ASSEMBLE/BIND), same-type (CHUNK внутри CHUNK) заблокирован; safe sugar с одним same-branch <code>MORPH</code> разрешён; top-level <code>AND</code> внутри branch не поддержан;</li>
+          <li>v21 POOL adjunct: <code>POOL{prompt}</code>, один блок на ветку prompt; заменяет pooled/global conditioning и может сосуществовать с plain prompt или одним backend; body теперь поддерживает nested backend-блоки (CHUNK/BLEND/MORPH/ASSEMBLE/BIND), same-type (POOL внутри POOL) заблокирован;</li>
+          <li>v21 BIND adjunct: <code>base prompt BIND{owner =&gt; attrs}</code> и <code>BIND^k{owner =&gt; attrs}</code>, допускает несколько <code>BIND</code> в одной ветке, owner/attrs теперь поддерживают nested backend-блоки (CHUNK/BLEND/MORPH/POOL/ASSEMBLE), same-type (BIND внутри BIND) заблокирован; не сочетается с <code>CHUNK/ASSEMBLE/BLEND/MORPH</code> на том же уровне AND-ветки и не с top-level <code>AND</code>;</li>
+          <li>v21 ASSEMBLE backend: <code>ASSEMBLE{enc1=...; enc2=...; pooled=...}</code>, один блок на ветку prompt; поля теперь поддерживают nested backend-блоки (CHUNK/BLEND/MORPH/POOL/BIND), same-type (ASSEMBLE внутри ASSEMBLE) заблокирован; top-level <code>AND</code> внутри полей не поддержан;</li>
+          <li>v21 BLEND backend: <code>BLEND^k[mode@channel]{branch*weight | ...}</code>, где <code>mode = mean / sum</code>, <code>channel = both / cross / pooled / enc1 / enc2</code>, <code>k=1</code> сохраняет прежнее поведение, <code>k&gt;1</code> усиливает доминирующие ветки, а <code>0&lt;k&lt;1</code> смягчает blend; один блок на ветку prompt; ветки теперь поддерживают nested backend-блоки (CHUNK/MORPH/POOL/ASSEMBLE/BIND), same-type (BLEND внутри BLEND) заблокирован; top-level <code>AND</code> внутри branch не поддержан;</li>
+          <li>v21 MORPH backend: <code>MORPH^k@channel{prompt*weight =&gt; prompt*weight@step ~ curve}</code> и <code>MORPH^k@channel[start-end]{prompt*weight =&gt; prompt*weight}</code>, где <code>channel = both / cross / pooled / enc1 / enc2</code>, <code>k=1</code> сохраняет прежнее поведение, <code>k&gt;1</code> делает переход резче, а <code>0&lt;k&lt;1</code> мягче; optional point weights смещают вклад control-points; один блок на ветку prompt; control-points теперь поддерживают nested backend-блоки (CHUNK/BLEND/POOL/ASSEMBLE/BIND), same-type (MORPH внутри MORPH) заблокирован; curves <code>linear/bezier/catmull</code>, top-level <code>AND</code> внутри points не поддержан; safe sugar с одним same-branch <code>CHUNK</code> разрешён;</li>
+          <li>AND-нормализацию и экранирование <code>\&amp;</code>;</li>
+          <li>sequence DSL: <code>::</code>, <code>!!</code>, <code>!!!</code>, терминации <code>! ; ~</code>;</li>
+          <li>группы <code>{...}</code> и ограничения комбинаторного взрыва;</li>
+          <li>строгий lint/объяснение ошибок и фиксы;</li>
+          <li>детерминизм seed/caching и влияние env-флагов на поведение.</li>
+        </ul>
+        <div class="note ok">
+          Итог: да, парсер поддерживает очень широкий DSL-слой. Но для стабильной UX-работы
+          обязательно использовать помощник через «сборка шаблона → lint → schedule preview → финал».
+        </div>
+      </section>
+
+      <section id="v21">
+        <h2>13) Дополнения v21+: BIND2, BIND3, COMPOUND, SLERP, easing и fix-pack</h2>
+
+        <h3>13.1 Новый синтаксис interpolation</h3>
+        <table>
+          <thead><tr><th>Форма</th><th>Смысл</th><th>Пример результата</th></tr></thead>
+          <tbody>
+            <tr><td><code>(cat:1.0-&gt;2.0)</code></td><td>Линейная интерполяция веса</td><td><code>(cat:1.0) ... (cat:2.0)</code></td></tr>
+            <tr><td><code>(cat:1.0-&gt;2.0~ease-in)</code></td><td>Медленный старт, быстрый финиш</td><td>середина ниже linear</td></tr>
+            <tr><td><code>(cat:1.0-&gt;2.0~ease-out)</code></td><td>Быстрый старт, медленный финиш</td><td>середина выше linear</td></tr>
+            <tr><td><code>(cat:1.0-&gt;2.0~ease-in-out)</code></td><td>S-кривая</td><td>плавный старт/финиш</td></tr>
+            <tr><td><code>(red (glowing eyes):0.8-&gt;1.4)</code></td><td>Nested body (v2)</td><td>вложенные скобки поддерживаются scanner-ом</td></tr>
+          </tbody>
+        </table>
+
+        <h3>13.2 Easing-кривые</h3>
+<pre>linear      : t
+ease-in     : t^2
+ease-out    : t * (2 - t)
+ease-in-out : t^2 * (3 - 2t)</pre>
+
+        <h3>13.3 Backward compatibility и стабильность</h3>
+        <ul>
+          <li>Старый формат без <code>~mode</code> работает как раньше (<code>linear</code> по умолчанию).</li>
+          <li>Unknown mode (например <code>~banana</code>, <code>~ease_in</code>) не ломает парсинг, а мягко падает в <code>linear</code>.</li>
+          <li>Mode парсится case-insensitive: <code>~EASE-IN</code> и <code>~ease-in</code> эквивалентны.</li>
+        </ul>
+
+        <h3>13.4 Backend-блоки CHUNK / POOL / BIND / BIND2 / BIND3 / ASSEMBLE / BLEND / MORPH / COMPOUND</h3>
+        <table>
+          <thead><tr><th>Блок</th><th>Назначение</th><th>Ключевые ограничения v1</th></tr></thead>
+          <tbody>
+            <tr><td><code>CHUNK{...}</code> / <code>CHUNK[share-pooled]{...}</code> / <code>CHUNK[share-cross]{...}</code></td><td>Изолированные backend-ветки с BREAK-preview; optional shared-channel modes удерживают pooled/global или cross канал от общего prefix/suffix anchor</td><td>Top-level only, один <code>CHUNK</code> на ветку prompt; cross-type nested backends (MORPH/BLEND/POOL/ASSEMBLE/BIND) внутри веток поддержаны; same-type nesting (CHUNK внутри CHUNK) заблокирован; top-level <code>AND</code> внутри branch не поддержан</td></tr>
+            <tr><td><code>POOL{...}</code></td><td>Top-level pooled-only side prompt; заменяет pooled/global conditioning и держит token-wise <code>cross-attention</code> от base prompt или backend-anchor</td><td>Top-level only, один <code>POOL</code> на ветку prompt; может сосуществовать с plain prompt или одним backend; body теперь поддерживает nested backend-блоки (CHUNK/BLEND/MORPH/ASSEMBLE/BIND); same-type nesting (POOL внутри POOL) заблокирован</td></tr>
+            <tr><td><code>BIND{owner =&gt; attrs}</code> / <code>BIND^k{owner =&gt; attrs}</code></td><td>Owner-binding adjunct: строит скрытые composable ветки вида <code>owner, attrs</code>, которые сильнее привязывают признаки к owner, чем plain text; в SDXL-like dict runtime bind-ветка по умолчанию берёт свой <code>cross-attention</code>, но держит pooled/global anchor от base prompt</td><td>Top-level only, можно использовать несколько <code>BIND</code> в одной ветке; требуется непустой base prompt вне <code>BIND</code>-блоков; owner/attrs теперь поддерживают nested backend-блоки (CHUNK/BLEND/MORPH/POOL/ASSEMBLE); same-type nesting (BIND внутри BIND) заблокирован; top-level <code>AND</code> внутри owner/attrs не поддержан; BIND не сочетается с <code>CHUNK/ASSEMBLE/BLEND/MORPH</code> на том же уровне AND-ветки</td></tr>
+            <tr><td><code>BIND2{owner =&gt; attr1, attr2}</code> / <code>BIND2^k{owner =&gt; attrs}</code></td><td>BIND2 transpile: текстовая трансформация <code>BIND2{...}</code> в <code>CHUNK{owner, attr1 | owner, attr2}</code> до Lark-парсинга. Path 2 (delta-encoding) в conditioning: <code>blend(R, V_1, V_2, ...)</code> с весами <code>[1-N, 1, 1, ...]</code></td><td>Один BIND2 на prompt в Path 2; transpile-путь не имеет ограничений на количество. Owner/attrs поддерживают nested backend-блоки. Same-type nesting заблокирован. Padding атрибутов использует реальный token count через <code>_tokenize_strip_special</code></td></tr>
+            <tr><td><code>BIND3{owner =&gt; attr1, attr2}</code></td><td>BIND3 row-splice: заменяет строки токенов owner на attr в conditioning tensor, используя <code>_splice_condition_rows</code> с поддержкой multi-chunk (&gt;75 токенов) и scheduling атрибутов (<code>BIND3{owner =&gt; [cat:dog:5], [big:small:10]}</code>)</td><td>Один BIND3 на ветку prompt. Owner не может содержать <code>|</code>. Padding использует <code>_tokenize_strip_special</code> через Patch A. Multi-chunk поддержан через Patch C. Scheduling атрибутов через Patch B. Token span assertion после <code>_compute_row_ranges</code></td></tr>
+            <tr><td><code>COMPOUND{base | part@range*weight}</code></td><td>COMPOUND delta-encoding: аддитивное накапливание дельт <code>cond[t] = base_cond + Σ(w_i * (part_cond_i - base_cond))</code> с per-part step ranges. Каждая часть активна только в своём диапазоне шагов</td><td>Один COMPOUND на ветку prompt. Part-тексты — plain text (v1), <code>[a:b:N]</code> внутри part запрещён. <code>@0</code> → <code>@1</code> silent coerce. Вес <code>*-1.0</code> поддержан. Prefix/suffix контекст при кодировании (BUG-6 fix)</td></tr>
+            <tr><td><code>ASSEMBLE{enc1=...; enc2=...; pooled=...}</code></td><td>SDXL-style post-assemble backend: отдельно кодирует секции обычным runtime-path и затем собирает итоговый <code>cross-attention</code> из <code>enc1/enc2</code>, а pooled/global часть — из <code>pooled</code> или <code>enc2</code></td><td>Top-level only, один <code>ASSEMBLE</code> на ветку prompt; <code>enc1</code> и <code>enc2</code> обязательны; поля теперь поддерживают nested backend-блоки (CHUNK/BLEND/MORPH/POOL/BIND); same-type nesting (ASSEMBLE внутри ASSEMBLE) заблокирован; top-level <code>AND</code> внутри полей не поддержан; runtime требует SDXL-style dict conditioning</td></tr>
+            <tr><td><code>BLEND^k[mode@channel]{...}</code></td><td>Статическое смешивание conditioning-веток; <code>mean</code> по умолчанию, <code>sum</code> сохраняет raw total weight, intensity <code>k</code> меняет доминирование веток глобально, а <code>channel</code> выбирает <code>both</code>, <code>cross</code>, <code>pooled</code>, <code>enc1</code> или <code>enc2</code></td><td>Top-level only, один <code>BLEND</code> на ветку prompt; ветки теперь поддерживают nested backend-блоки (CHUNK/MORPH/POOL/ASSEMBLE/BIND); same-type nesting (BLEND внутри BLEND) заблокирован; top-level <code>AND</code> внутри branch не поддержан; <code>@cross</code> смешивает весь token-wise context и держит pooled/global якорным, <code>@pooled</code> делает наоборот, а <code>@enc1</code>/<code>@enc2</code> меняют только одну SDXL-style половину <code>cross-attention</code></td></tr>
+            <tr><td><code>MORPH^k@channel{...}</code> / <code>MORPH^k@channel[start-end]{...}</code></td><td>Переход между control-prompts по шагам с curve blending или в ограниченном окне шагов; intensity <code>k</code> меняет резкость морфа глобально, point weights смещают вклад точек локально, а <code>channel</code> выбирает <code>both</code>, <code>cross</code>, <code>pooled</code>, <code>enc1</code> или <code>enc2</code></td><td>Top-level only, один <code>MORPH</code> на ветку prompt, без outer scheduler wrapper; окно нельзя смешивать с per-point <code>@boundary</code>; point weight пишется как <code>prompt*1.3@0.6</code>; control-points теперь поддерживают nested backend-блоки (CHUNK/BLEND/POOL/ASSEMBLE/BIND); same-type nesting (MORPH внутри MORPH) заблокирован; top-level <code>AND</code> внутри points не поддержан; <code>@cross</code> морфит весь token-wise context и держит pooled/global якорным, <code>@pooled</code> делает наоборот, а <code>@enc1</code>/<code>@enc2</code> меняют только одну SDXL-style половину <code>cross-attention</code>; safe sugar с одним same-branch <code>CHUNK</code> разрешён</td></tr>
+        </tbody>
+        </table>
+        <div class="note ok">
+          <code>CHUNK[share-pooled]</code> держит pooled/global conditioning от общего <code>prefix + suffix</code> anchor и по-прежнему раскладывает branch-тексты в <code>cross-attention</code>. <code>CHUNK[share-cross]</code> делает симметричную, но более нишевую вещь: держит общий cross-канал и позволяет branch-веткам влиять на pooled/global часть.
+        </div>
+        <div class="note ok">
+          <code>POOL{...}</code> — это не новый backend-комбайнер, а top-level adjunct. Он отдельно кодируется в pooled/global канал, а token-wise <code>cross-attention</code> остаётся от base prompt-а или уже собранного backend-результата. На tensor-only/non-dict пути <code>POOL</code> мягко деградирует в no-op и не ломает старые модели.
+        </div>
+        <div class="note ok">
+          <code>ASSEMBLE{enc1=...; enc2=...; pooled=...}</code> — это не честный pre-encode <code>ENCODE</code>. Блок работает post-encode: отдельно прогоняет секции через обычный <code>get_learned_conditioning(...)</code> и затем собирает SDXL-style каналы уже из готовых conditioning-значений. Поэтому он реалистичен для A1111-like runtime, но честно требует SDXL-style dict conditioning.
+        </div>
+        <div class="note ok">
+          <code>BLEND^1.0</code> эквивалентен старому поведению. Значения выше <code>1</code> усиливают доминирующие ветки, а значения ниже <code>1</code> делают смешивание мягче. Для <code>mean</code> интенсивность меняет нормализованные пропорции, а для <code>sum</code> сохраняет общий raw weight total, но перераспределяет вклад веток. Channel-targeting через <code>@cross</code> и <code>@pooled</code> даёт SDXL-aware режим: можно смешивать только token-wise context или только pooled/global conditioning, не открывая nested backend-мешанину. Каналы <code>@enc1</code> и <code>@enc2</code> ещё точнее: они меняют только одну SDXL-style половину 2048-мерного <code>cross-attention</code> контекста и держат вторую половину якорной.
+        </div>
+        <div class="note ok">
+          <code>MORPH^1.0</code> эквивалентен старому поведению. Значения выше <code>1</code> усиливают и ускоряют переход между точками, а значения ниже <code>1</code> делают его мягче. Optional point weights вроде <code>human*0.8</code> и <code>cyborg*1.3@0.6</code> отдельно смещают вклад control-points внутри самого морфа. Channel-targeting через <code>@cross</code> и <code>@pooled</code> даёт SDXL-aware режим: можно морфить только token-wise context или только pooled/global conditioning, не открывая raw embedding surgery. Каналы <code>@enc1</code> и <code>@enc2</code> дополнительно позволяют морфить только одну SDXL-style половину <code>cross-attention</code> и держать вторую половину якорной.
+        </div>
+        <div class="note warn">
+          Safe sugar не означает свободное смешивание backend-блоков. Поддерживаются только две shorthand-формы:
+          <code>prefix CHUNK{...} middle MORPH{...}</code> и <code>prefix MORPH{...} middle CHUNK{...}</code>.
+          Они разворачиваются через <code>CHUNK</code>-distribution в уже поддержанный conditioning-path. Формы с <code>BLEND</code>, двумя <code>CHUNK</code>, двумя <code>MORPH</code> или произвольным same-branch mixing по-прежнему считаются unsupported.
+        </div>
+
+        <h3>13.5 Дополнительные исправления v21</h3>
+        <ul>
+          <li>Коллизии служебных плейсхолдеров устранены (private-use chars вместо строковых маркеров).</li>
+          <li>Исправлен кейс <code>reverse, suffix</code> в postfix-формах (без паразитной запятой в начале текста).</li>
+          <li>Исправлена boundary-семантика: <code>1</code> и <code>1.0</code> снова означают шаг 1, а не <code>100%</code>.</li>
+          <li>Исправлен multicond split: теперь <code>AND</code> режется только на верхнем уровне и уважает вложенность/escape.</li>
+          <li>Добавлены backend-слои <code>CHUNK</code>, <code>BLEND</code>, <code>MORPH</code> и pooled-only adjunct <code>POOL</code> с preview, lint и conditioning-интеграцией.</li>
+          <li><code>CHUNK</code> получил shared-channel режимы: <code>CHUNK[share-pooled]{...}</code> и <code>CHUNK[share-cross]{...}</code> теперь могут удерживать pooled/global или cross канал от общего anchor без изменения BREAK-preview текста.</li>
+          <li><code>POOL</code> добавляет отдельный top-level pooled/global prompt: <code>scene wolf POOL{cold ominous atmosphere}</code> сохраняет base cross-attention от <code>scene wolf</code>, но подменяет pooled/global conditioning отдельным side prompt-ом.</li>
+          <li><code>BIND</code> добавляет top-level owner-binding adjunct: <code>1girl, street scene BIND{1boy =&gt; red eyes, pink scarf}</code> создаёт скрытую composable owner-ветку и сильнее привязывает признаки к <code>1boy</code>, чем обычный text-sugar вроде <code>owner: attrs</code>. Это не spatial mask и не абсолютная изоляция, но semantic bleed заметно ниже, чем у plain text.</li>
+          <li><code>ASSEMBLE</code> добавляет честный A1111-compatible SDXL-style assembly path: <code>ASSEMBLE{enc1=wolf; enc2=moonlit forest; pooled=cold atmosphere}</code> отдельно кодирует секции обычным runtime-path и затем собирает итоговые <code>enc1 / enc2 / pooled</code> каналы без фальшивого dual-encoder pre-routing.</li>
+          <li><code>BLEND</code> получил global intensity-control и channel-targeting: <code>BLEND^k[mean]{...}</code>, <code>BLEND[mean@cross]{...}</code>, <code>BLEND[mean@pooled]{...}</code>, <code>BLEND[mean@enc1]{...}</code> и <code>BLEND^k[sum@channel]{...}</code> теперь умеют отдельно управлять доминированием веток и тем, смешивается ли весь <code>cross-attention</code>, pooled/global conditioning или только одна SDXL-style половина <code>cross-attention</code>.</li>
+          <li><code>MORPH</code> получил global intensity-control, optional point weights и channel-targeting: <code>MORPH^k@cross{human*0.8 =&gt; cyborg*1.3@0.6}</code>, <code>MORPH@pooled{photo =&gt; anime@0.6}</code>, <code>MORPH@enc1{human =&gt; cyborg@0.6}</code> и <code>MORPH^k@channel[start-end]{...}</code> теперь умеют отдельно управлять резкостью перехода, локальным вкладом control-points и тем, морфится ли весь <code>cross-attention</code>, pooled/global conditioning или только одна SDXL-style половина <code>cross-attention</code>.</li>
+          <li>Preview/lint-path для top-level <code>AND</code> с backend-ветками теперь multicond-aware в Python runtime, а builder тоже раскладывает такие ветки отдельно, но всё равно честно помечается как эвристический UI-preview.</li>
+          <li>Добавлены safe sugar-формы <code>CHUNK + tail MORPH</code> и <code>MORPH + tail CHUNK</code>; они не открывают free-form mixing, а разворачиваются в контролируемый <code>CHUNK</code>-path.</li>
+          <li>Broken interpolation shells вроде <code>(cat:1.0-&gt;)</code> больше не пережёвываются в странный runtime-текст: lint ругается, а preview мягко падает в literal.</li>
+          <li><code>SdConditioning</code> сохраняет falsy-значения (<code>0</code>) без потери.</li>
+          <li><strong>Phase 1 (text extraction):</strong> Удалены 6 body-level cross-type guards из всех <code>_extract_*_prompt_spec</code> / <code>_extract_bind_prompt_bundle</code> — теперь CHUNK, BLEND, MORPH, POOL, ASSEMBLE, BIND могут содержать любые cross-type nested backends. Исправлен <code>_extract_backend_prompt_state</code> для подавления ложных <code>unsupported_pool_context</code>/<code>unsupported_bind_context</code> при наличии другого backend-блока. Удалены 12 parametrize-записей из lint-тестов.</li>
+          <li><strong>Phase 2 (conditioning pipeline):</strong> Все 6 backends переписаны для рекурсивного диспетчера <code>_build_prompt_conditioning_schedule</code>. Каждый handler (BLEND, MORPH, CHUNK, POOL, ASSEMBLE, BIND) вызывает dispatcher для своих branch/point/field-текстов. Добавлен hybrid batch-encoding: для BLEND и MORPH plain-тексты кодируются одним batch-вызовом <code>model.get_learned_conditioning</code> (при <code>use_scheduling=False</code>), а nested backend-тексты — рекурсивно по одному. <code>str(cond)</code> удалён из всех dedup-ключей (ASSEMBLE, BLEND, MORPH) — заменены на schedule-index tuples, что устраняет GPU sync и truncation-риски. Исправлены boundary-сборщики: ASSEMBLE, BLEND и CHUNK теперь используют <code>cond_schedule</code> списки (включая <code>anchor_cond_schedule</code> для CHUNK). BIND: <code>bind_text_schedule</code> включён в <code>_collect_schedule_boundaries</code>, dedup-ключ использует <code>(base_index, bind_text)</code>, удалён мёртвый <code>unique_texts</code>. MORPH: неактивный ключ использует <code>inactive_idx</code>, а не <code>str(inactive_cond)</code>. <code>_contains_bind_marker</code> добавлен в BLEND и MORPH backend-детекцию.</li>
+          <li>Покрытие тестами расширено: escaped literals, boundary semantics, conditioning safety, CHUNK, POOL, BLEND, MORPH, combo/fuzz matrix, nested backend conditioning tests, model.calls assertions.</li>
+          <li><strong>BIND2 transpile (Path 1):</strong> <code>BIND2{owner =&gt; attr1, attr2}</code> → <code>CHUNK{owner, attr1 | owner, attr2}</code> на уровне текста, до Lark-парсинга. Path 2 (delta-encoding): <code>blend(R, V_1, V_2, ...)</code> с весами <code>[1-N, 1, 1, ...]</code>. Padding исправлен с <code>len(a.split())</code> на <code>_tokenize_strip_special(model, a)</code> (Patch A).</li>
+          <li><strong>BIND3 row-splice (Path 2):</strong> <code>BIND3{owner =&gt; attr1, attr2}</code> заменяет строки токенов owner на attr в conditioning tensor через <code>_splice_condition_rows</code>. Поддержка multi-chunk (&gt;75 токенов, Patch C) и scheduling атрибутов (Patch B). Token span assertion после <code>_compute_row_ranges</code> (R11). Owner <code>|</code> check (BUG-2). Non-standard tokenizer → ошибка, а не silent no-op (BUG-4). Nested BIND3 теперь достижим через <code>_find_top_level_bind3_blocks</code> (R10).</li>
+          <li><strong>COMPOUND delta-encoding:</strong> <code>COMPOUND{base | part@5-15*1.0}</code> — аддитивные дельты с per-part step ranges. Каждая часть кодируется с prefix/suffix контекстом (BUG-6). Прямая сумма дельт, а не sequential lerp (NEW-BUG-1). Multiple COMPOUND blocks поддержаны (NEW-BUG-2). <code>*-1.0</code> вес корректен (NEW-BUG-5). <code>_compound_delta_apply</code> удалён как dead code.</li>
+          <li><strong>Tensor SLERP в MORPH:</strong> <code>MORPH{cat|dog|fox*slerp}</code> — spherical linear interpolation conditioning. Реализованы <code>_slerp_tensor</code>, <code>_slerp_condition_values</code>, dispatch в <code>_build_morph_prompt_conditioning_schedule</code>.</li>
+          <li><strong>Bezier/Catmull easing:</strong> <code>(cat:1.0-&gt;2.0~bezier)</code> и <code>~catmull</code> — easing-кривые для attention interpolation (<code>w0-&gt;w1</code>). Реализованы <code>_EASING_MODES</code> и сглаживание через Bernstein/centripetal Catmull-Rom.</li>
+          <li><strong>BUG-1..6 (аудит claims 4-12):</strong> Исправлены: <code>[a:b:c:N]</code> со <code>round()</code> collision (★), BIND3 owner <code>|</code> lint/conditioning check (★★★), <code>parse_prompt_attention("(word):2.0")</code> weight ignore (★★), BIND3 non-standard tokenizer silent no-op (★★), <code>parse_prompt_attention("cat::dog")</code> double colon (★), COMPOUND prefix/suffix контекст (★★★).</li>
+          <li><strong>NEW-BUG-1..6 (AUDIT_REPORT_V2):</strong> Исправлены: COMPOUND sequential lerp → прямая сумма дельт (★★★), RecursionError на multiple COMPOUND (★★★), ложный <code>unescaped_brace_literal</code> WARNING через <code>"COMPOUND"</code> в кортеже (★★), <code>_compute_row_ranges ValueError</code> → <code>PromptSyntaxError</code> (★★), <code>*-1.0</code> не матчился regex (★★), <code>narrow_bracket_boundary</code> — <code>re.search</code> → <code>re.finditer</code> (★★).</li>
+          <li><strong>Phase 4 (sequential backend segments):</strong> Разные бэкенды в одном промпте (<code>CHUNK{a|b} BLEND{c|d}</code>). Multiple BIND3 поддержан. <code>_extract_sequential_backend_segments</code> теперь знает о COMPOUND (NEW-BUG-2 fix).</li>
+          <li><strong>Phase 5 (WARNING-level lint):</strong> W1-W7 checks в <code>lint_prompt</code> (en/ru). <code>_BACKEND_WARNINGS</code> dict: single_branch_chunk, duplicate_blend_branches. 7 self-tests + 5 Phase 4 smoke-tests.</li>
+          <li><strong>Silent-swallow fix:</strong> <code>get_schedule</code> больше не глотает семантические ошибки <code>PromptSyntaxError</code> — фильтр через <code>_STRUCTURAL_ERROR_KINDS</code> (53 kind'ов) + <code>logging.warning</code> с дедупликацией для остальных.</li>
+          <li><strong>Pool+assemble рефакторинг:</strong> <code>_find_keyword_brace_blocks</code> заменяет 2×~60 идентичных строк в <code>_find_top_level_pool_blocks</code> + <code>_find_top_level_assemble_blocks</code> (66 строк удалено).</li>
+          <li><strong>Dead code removal:</strong> D2 (compound grammar rule), D5 (пустой pass), D7 (алиас), D8 (<code>_content_to_tensor_row</code>), <code>_compound_delta_apply</code>. 6 мёртвых <code>elif</code> в <code>_format_syntax_error</code>.</li>
+          <li><strong>R10:</strong> <code>nested_bind3_not_supported</code> теперь достижим — заменён <code>_RE_BIND3_MARKER.finditer</code> на <code>_find_top_level_bind3_blocks(protected)</code>.</li>
+          <li><strong>R11:</strong> Token span assertion (<code>sum(e-s) &gt; 0</code>) после <code>_compute_row_ranges</code> в обоих путях <code>_build_bind3_conditioning_schedule</code>.</li>
+        </ul>
+      </section>
+
+      <section id="choose-block">
+        <h2>14) Как выбрать блок — быстрый guide по backend-блокам</h2>
+
+        <div class="flow">
+          <div class="node"><strong>1. Главный вопрос:</strong><br>Что нужно сделать с conditioning?</div>
+          <div class="node"><strong>2. Выбери роль</strong><br>по таблице ниже</div>
+          <div class="node"><strong>3. Проверь лимиты</strong><br>один блок на ветку (кроме BIND)</div>
+          <div class="node"><strong>4. Используй lint</strong><br>builder / lint_prompt</div>
+          <div class="node"><strong>5. Preview</strong><br>schedule preview перед финалом</div>
+        </div>
+
+        <table>
+          <thead><tr><th>Блок</th><th>Когда использовать</th><th>Пример</th><th>Эффект</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>AND</code></td>
+              <td>Две независимые ветки, которые не должны смешиваться</td>
+              <td><code>style:0.7 AND character:1.3</code></td>
+              <td>Каждая ветка — отдельный CFG-элемент</td>
+            </tr>
+            <tr>
+              <td><code>POOL{...}</code></td>
+              <td>Нужно повлиять на общую атмосферу/стиль, не меняя основной промпт</td>
+              <td><code>scene wolf POOL{cold ominous atmosphere}</code></td>
+              <td>Заменяет pooled/global conditioning, cross-attention от base</td>
+            </tr>
+            <tr>
+              <td><code>BIND{owner =&gt; attrs}</code></td>
+              <td>Нужно привязать признаки к конкретному owner сильнее, чем plain text</td>
+              <td><code>BIND{1boy =&gt; red eyes, pink scarf}</code></td>
+              <td>Скрытая composable ветка owner+attrs</td>
+            </tr>
+            <tr>
+              <td><code>CHUNK{...}</code></td>
+              <td>Общий prefix/suffix нужно размножить в изолированные ветки</td>
+              <td><code>forest CHUNK{wolf*1.5 | hunter*0.8} fog</code></td>
+              <td>Изолированные backend-ветки с BREAK-preview</td>
+            </tr>
+            <tr>
+              <td><code>BIND2{...}</code></td>
+              <td>Хочешь CHUNK-композицию, но с синтаксисом owner→attrs</td>
+              <td><code>BIND2{1girl =&gt; red hair, blue eyes}</code></td>
+              <td>Транспиляция → CHUNK{1girl, red hair | 1girl, blue eyes}</td>
+            </tr>
+            <tr>
+              <td><code>BIND3{...}</code></td>
+              <td>Нужно заменить конкретные строки токенов owner на attr</td>
+              <td><code>BIND3{1girl =&gt; red hair, blue eyes}</code></td>
+              <td>Row-splice conditioning tensor</td>
+            </tr>
+            <tr>
+              <td><code>COMPOUND{...}</code></td>
+              <td>Нужны per-part дельты с разными диапазонами шагов</td>
+              <td><code>COMPOUND{base | smiling@5-15*1.0 | angry@15-20*0.5}</code></td>
+              <td>Delta-encoding: <code>base + Σ(w * (part - base))</code></td>
+            </tr>
+            <tr>
+              <td><code>BLEND{...}</code></td>
+              <td>Нужно статически смешать несколько conditioning-веток</td>
+              <td><code>BLEND[mean@cross]{wolf | hunter}</code></td>
+              <td>Weighted mean/sum по шагам</td>
+            </tr>
+            <tr>
+              <td><code>MORPH{...}</code></td>
+              <td>Нужен плавный переход между промптами по шагам</td>
+              <td><code>MORPH[linear]{human =&gt; cyborg}</code> или <code>MORPH{cat|dog|fox*slerp}</code></td>
+              <td>Curve-blending / spherical SLERP между control points</td>
+            </tr>
+            <tr>
+              <td><code>ASSEMBLE{...}</code></td>
+              <td>SDXL: нужно раздельно задать enc1/enc2/pooled</td>
+              <td><code>ASSEMBLE{enc1=wolf; enc2=forest; pooled=cold}</code></td>
+              <td>Post-encode сборка SDXL каналов</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note warn">
+          <strong>Лимиты v1:</strong> один backend-блок на ветку prompt (кроме BIND/BIND2, которых может быть несколько). Same-type nesting заблокирован для всех блоков. Top-level <code>AND</code> внутри backend-блоков не поддержан.
+        </div>
+
+        <h3>Быстрый выбор по ситуации</h3>
+        <table>
+          <thead><tr><th>Ситуация</th><th>Рекомендуемый блок</th></tr></thead>
+          <tbody>
+            <tr><td>Нужно просто разделить два промпта</td><td><code>AND</code></td></tr>
+            <tr><td>Хочу изменить общее настроение, не трогая сюжет</td><td><code>POOL{...}</code></td></tr>
+            <tr><td>У меня есть объект и его атрибуты</td><td><code>BIND{...}</code> или <code>BIND2{...}</code></td></tr>
+            <tr><td>Хочу заменить токены owner на attr в conditioning tensor</td><td><code>BIND3{...}</code></td></tr>
+            <tr><td>Нужны изолированные ветки с общим контекстом</td><td><code>CHUNK{...}</code></td></tr>
+            <tr><td>Нужно аддитивно добавить детали с per-step контролем</td><td><code>COMPOUND{...}</code></td></tr>
+            <tr><td>Хочу статически смешать два промпта</td><td><code>BLEND{...}</code></td></tr>
+            <tr><td>Хочу плавный переход между состояниями</td><td><code>MORPH{...}*slerp</code> (SLERP) или <code>MORPH{~bezier}</code></td></tr>
+            <tr><td>SDXL: нужен полный контроль над каналами</td><td><code>ASSEMBLE{...}</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="lark-backend-guide">
+        <h2>15) Гайд по Lark-грамматике и backend-интеграции</h2>
+
+        <h3>15.1 Как Lark работает в парсере</h3>
+        <p>
+          Парсер использует <strong>гибридный подход</strong>: Lark-грамматика (~L5988) отвечает за структурный разбор
+          (AND-композиция, backend-блоки, вложенность, scheduling-конструкции <code>[a:b:N]</code>), а regex-фаза (~L6042)
+          обрабатывает attention-веса, interpolation <code>(word:1.0->2.0)</code> и escaping.
+        </p>
+        <ul>
+          <li>Lark запускается только если есть синтаксис, требующий структурного разбора (AND, backend-блоки, scheduling).</li>
+          <li>Plain-промпты без специального синтаксиса идут через regex fast-path (Lark не вызывается).</li>
+          <li>Грамматика определена как <code>lark.Lark(grammar, parser="lalr", ...)</code> — LALR(1) парсер.</li>
+        </ul>
+
+        <h3>15.2 Основные Lark-правила</h3>
+        <table>
+          <thead><tr><th>Правило</th><th>Назначение</th></tr></thead>
+          <tbody>
+            <tr><td><code>start</code></td><td>Точка входа — <code>prompt</code> (весь пользовательский текст)</td></tr>
+            <tr><td><code>prompt</code></td><td>Последовательность <code>prompt_expression</code> через <code>AND</code></td></tr>
+            <tr><td><code>prompt_expression</code></td><td>Одна AND-ветка: последовательность токенов, backend-блоков, scheduling</td></tr>
+            <tr><td><code>and_expression</code></td><td><code>prompt_expression "AND" prompt_expression</code> — multicond split</td></tr>
+            <tr><td><code>scheduled_block</code></td><td><code>[a:b:N]</code> — scheduling в квадратных скобках</td></tr>
+            <tr><td><code>scheduled_alternates</code></td><td><code>[a:b]</code> — постфиксная альтернатива</td></tr>
+            <tr><td><code>chunk_block</code></td><td><code>CHUNK{...}</code> — изолированные ветки</td></tr>
+            <tr><td><code>blend_block</code></td><td><code>BLEND{...}</code> — смешивание conditioning</td></tr>
+            <tr><td><code>morph_block</code></td><td><code>MORPH{...}</code> — переход по шагам</td></tr>
+            <tr><td><code>pool_block</code></td><td><code>POOL{...}</code> — pooled-only side prompt</td></tr>
+            <tr><td><code>bind_block</code></td><td><code>BIND{...}</code> — owner-binding adjunct</td></tr>
+            <tr><td><code>assemble_block</code></td><td><code>ASSEMBLE{...}</code> — SDXL assembly</td></tr>
+            <tr><td><code>compound_block</code></td><td><code>COMPOUND{...}</code> — delta-encoding (v21)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>15.3 Backend-интеграция (conditioning pipeline)</h3>
+        <p>После Lark-парсинга AST преобразуется в conditioning через цепочку:</p>
+        <ol>
+          <li><strong>Text extraction</strong> — <code>_extract_backend_prompt_state</code> выделяет backend-спецификации (CHUNK/BLEND/MORPH/POOL/BIND/ASSEMBLE/COMPOUND) из защищённого окружения</li>
+          <li><strong>BIND2 transpile</strong> — <code>_transpile_bind2_to_chunk</code> преобразует BIND2 в CHUNK до Lark (если transpile-путь активен)</li>
+          <li><strong>Scheduling extraction</strong> — <code>get_schedule</code> собирает <code>[[end_step, text], ...]</code> с учётом backend-специфики</li>
+          <li><strong>Sequential segments</strong> — <code>_extract_sequential_backend_segments</code> обрабатывает mixed-backend промпты (Phase 4)</li>
+          <li><strong>Conditioning building</strong> — <code>_build_prompt_conditioning_schedule</code> рекурсивно диспетчеризует в handler каждого backend</li>
+          <li><strong>Hybrid batch encoding</strong> — plain-тексты кодируются batch-вызовом, nested backend-тексты — по одному</li>
+        </ol>
+
+        <div class="note ok">
+          <strong>Ключевой принцип:</strong> каждый backend-блок — это <strong>изолированный сабграф</strong> в AST. Lark
+          проверяет только структурную корректность (скобки, разделители). Семантическая валидация (веса, token counts,
+          supported nesting) происходит на этапе conditioning pipeline, а не в грамматике.
+        </div>
+
+        <h3>15.4 Что проверяет Lark, а что — runtime</h3>
+        <table>
+          <thead><tr><th>Проверка</th><th>Где</th><th>Пример ошибки</th></tr></thead>
+          <tbody>
+            <tr><td>Незакрытые скобки <code>{}</code></td><td>Lark</td><td><code>Unexpected EOF</code></td></tr>
+            <tr><td>Неверный разделитель в BLEND</td><td>Lark</td><td><code>Unexpected token ':'</code></td></tr>
+            <tr><td>Пустой backend-блок</td><td>Runtime</td><td><code>empty_blend_body</code></td></tr>
+            <tr><td>Нулевой вес (<code>*0</code>)</td><td>Runtime</td><td><code>invalid_blend_weight</code></td></tr>
+            <tr><td>Same-type nesting</td><td>Runtime</td><td><code>nested_chunk_not_supported</code></td></tr>
+            <tr><td>Top-level AND внутри backend</td><td>Runtime</td><td><code>and_inside_backend_not_supported</code></td></tr>
+            <tr><td><code>[a:b:N]</code> внутри COMPOUND part</td><td>Runtime</td><td><code>compound_scheduling_inside_part_not_supported</code></td></tr>
+            <tr><td>BIND3 owner содержит <code>|</code></td><td>Runtime (BUG-2)</td><td><code>bind3_pipe_in_owner</code></td></tr>
+            <tr><td>Token count mismatch в BIND3 scheduling</td><td>Runtime (Patch B)</td><td><code>bind3_scheduling_token_mismatch</code></td></tr>
+            <tr><td>Невалидный range <code>@15-5</code></td><td>Runtime</td><td><code>compound_invalid_range</code></td></tr>
+            <tr><td>Unescaped <code>{</code>/<code>}</code> вне backend</td><td>Runtime (WARNING)</td><td><code>unescaped_brace_literal</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="footer">
+        Файл: <code>parser_fixed_21.html</code><br>
+        Основано на: <code>prompt_parser_fixed_v21.py</code> и текущих тестовых сценариях в проекте.
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+
+
+
